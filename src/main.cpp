@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
 
 
 // GxEPD_Example : test example for e-Paper displays from Waveshare and from Dalian Good Display Inc.
@@ -87,52 +88,79 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 
 #endif
 
+bool LEDs = false;
+
 int VCC = 3.3;
 int Messeingang=A0;
 int R1=1000.0;
 long Messwert;
+int Messwert_LOW = 7;
+int Messwert_HIGH = 108;
 float SpannungR2;
 float Widerstand;
+int Farbwert_rot;
+int Farbwert_gruen;
+int LED_Menge;
 
 int Balkenlaenge = 0;
-int Wassermenge = 50;
+int Wassermenge;
 int Fuellmengenprozent = 99;
+
+int Wassermax = 80;
+int Wassermin = 0;
 
 int links_Taste = D0;
 int mitte_Taste = D1;
-int rechts_Taste = D10;
+//int rechts_Taste = D10; angeschlossen auf SD3 / GPIO 10_ aber noch keine Idee wie man drankommt
+
+int pin = D9;
+int numPixels   = 8;
+int pixelFormat = NEO_GRB + NEO_KHZ800;
+Adafruit_NeoPixel *pixels;
 
 void Anzeige_Standard();
-void Balkenberechnung();
 void Anzeige_Menue();
 void Messen();
+void Anzeige_LED();
+void all_mapping();
 
-void setup()
-{
+void setup(){
   pinMode(links_Taste, INPUT_PULLUP);
   pinMode(mitte_Taste, INPUT_PULLUP);
-  pinMode(rechts_Taste, INPUT_PULLUP);
+  //pinMode(rechts_Taste, INPUT_PULLUP);
   digitalWrite(links_Taste, HIGH);
-  digitalWrite(rechts_Taste, HIGH);
+  //digitalWrite(rechts_Taste, HIGH);
   Serial.begin(115200);
   Serial.println();
   Serial.println("setup");
   display.init(9600); // enable diagnostic output on Serial
   display.setRotation(1);
   Serial.println("setup done");
-  wdt_disable();
+  pixels = new Adafruit_NeoPixel(numPixels, pin, pixelFormat);
+  pixels->begin();
+  pixels->clear();
+  pixels->show();
+  //wdt_disable();
 }
 
-void loop()
-{
-  Balkenberechnung();
+void loop(){
+  pixels->clear();
+  if (digitalRead(links_Taste) == LOW){
+    LEDs = true;
+  }
   if (digitalRead(mitte_Taste) == LOW){
     Anzeige_Menue();
   }
   else {
    Messen();
+   all_mapping();
+   if (LEDs == true){
+   Anzeige_LED();
+   }
    Anzeige_Standard();
   }
+
+  
 }
 
 void Anzeige_Standard(){
@@ -149,7 +177,7 @@ void Anzeige_Standard(){
   display.print(Wassermenge);
   display.print("l");
 
-  display.setTextSize(6);
+  display.setTextSize(10);
   display.setCursor(10, 80);
   display.print(Fuellmengenprozent);
   display.print("%");
@@ -161,9 +189,7 @@ void Anzeige_Standard(){
   delay(5000);
 }
 
-void Balkenberechnung(){
-  Balkenlaenge = map(Wassermenge, 0, 80, 0, 200);
-}
+
 
 void Anzeige_Menue(){
   display.fillScreen(GxEPD_WHITE);
@@ -177,22 +203,61 @@ void Anzeige_Menue(){
   display.println("Wenn Tank leer,");
   display.println("linke Taste ...");
   display.println(" ");
-  display.println("Wenn Tank voll,");
-  display.println("rechte Taste ...");
-  display.println(" ");
   display.update();
   
-  while ((digitalRead(links_Taste) == HIGH) && (digitalRead(rechts_Taste) == HIGH)){
-    //wdt_reset();
-    if (digitalRead(rechts_Taste) == LOW){
-      Fuellmengenprozent = 0;
+ // while ((digitalRead(links_Taste) == HIGH) && (digitalRead(rechts_Taste) == HIGH)){
+   while (true){
+    delay(200);
+
+    if (digitalRead(links_Taste) == LOW){
+      Messen();
+      Messwert_LOW = Messwert;
       delay(100);
+      Serial.print("Messwert_LOW: ");
+      Serial.println(Messwert_LOW);
+      Serial.println("");
+      break;
     }
-    // if (digitalRead(rechts_Taste) == LOW){
-    //   Fuellmengenprozent = 100;
-    //   delay(100);
-    //   break;
-    // }
+  }
+  display.fillScreen(GxEPD_WHITE);
+  display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
+  display.setTextSize(2);
+  display.setCursor(80,7);
+  display.setTextColor(GxEPD_BLACK);
+  display.println("Menue");
+  display.setCursor(5,30);
+  display.setTextSize(3);
+  display.println("Danke!");
+  display.println("Jetzt Tank fuellen!");
+  display.println(" ");
+  display.update();
+  delay(2000);
+
+
+  display.fillScreen(GxEPD_WHITE);
+  display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
+  display.setTextSize(2);
+  display.setCursor(80,7);
+  display.setTextColor(GxEPD_BLACK);
+  display.println("Menue");
+  display.setCursor(5,30);
+  display.setTextSize(2);
+  display.println("Wenn Tank voll,");
+  display.println("linke Taste ...");
+  display.println(" ");
+  display.update();
+
+   while (true){
+
+    if (digitalRead(links_Taste) == LOW){
+      Messen();
+      Messwert_HIGH = Messwert;
+      delay(100);
+      Serial.print("Messwert_High: ");
+      Serial.println(Messwert_HIGH);
+      Serial.println("");
+      break;
+    }
   }
 }
 
@@ -215,9 +280,27 @@ void Messen(){
   Serial.print(Widerstand,2);
   Serial.println(" Ohm.");
   Serial.println();
+  Serial.println(Messwert);
   delay(1000);
 }
 
+void Anzeige_LED(){
+pixels->clear();
+pixels->show();
+  for(int i=0; i<LED_Menge; i++) { // For each pixel...
+    // pixels->Color() takes RGB values, from 0,0,0 up to 255,255,255
+    // Here we're using a moderately bright green color:
+    pixels->setPixelColor(i, pixels->Color(Farbwert_rot, Farbwert_gruen, 0));
+  }
+pixels->show();   // Send the updated pixel colors to the hardware. 
+}
 
-
+void all_mapping(){
+  Farbwert_gruen= map(Messwert, Messwert_LOW, Messwert_HIGH, 0, 100);
+  Farbwert_rot=map(Messwert, Messwert_LOW, Messwert_HIGH, 100, 0);
+  LED_Menge=map(Messwert, Messwert_LOW, Messwert_HIGH, 1,8);
+  Fuellmengenprozent = map(Messwert, Messwert_LOW, Messwert_HIGH, 0, 99);
+  Balkenlaenge = map(Messwert, Messwert_LOW, Messwert_HIGH, 0, 200);
+  Wassermenge = map(Messwert, Messwert_LOW, Messwert_HIGH, Wassermin, Wassermax);
+}
 
