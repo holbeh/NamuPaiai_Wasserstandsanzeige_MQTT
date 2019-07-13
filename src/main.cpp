@@ -87,91 +87,137 @@ GxEPD_Class display(io, /*RST=*/ 9, /*BUSY=*/ 7); // default selection of (9), 7
 
 #endif
 
+int VCC = 3.3;
+int Messeingang=A0;
+int R1=1000.0;
+long Messwert;
+float SpannungR2;
+float Widerstand;
 
-//void showBitmapExample();
-void showFont(const char name[], const GFXfont* f);
-//void showBoat();
-void drawCornerTest();
+int Balkenlaenge = 0;
+int Wassermenge = 50;
+int Fuellmengenprozent = 99;
+
+int links_Taste = D0;
+int mitte_Taste = D1;
+int rechts_Taste = D10;
+
+void Anzeige_Standard();
+void Balkenberechnung();
+void Anzeige_Menue();
+void Messen();
 
 void setup()
 {
+  pinMode(links_Taste, INPUT_PULLUP);
+  pinMode(mitte_Taste, INPUT_PULLUP);
+  pinMode(rechts_Taste, INPUT_PULLUP);
+  digitalWrite(links_Taste, HIGH);
+  digitalWrite(rechts_Taste, HIGH);
   Serial.begin(115200);
   Serial.println();
   Serial.println("setup");
-
-  display.init(115200); // enable diagnostic output on Serial
-  display.setRotation(90);
-
+  display.init(9600); // enable diagnostic output on Serial
+  display.setRotation(1);
   Serial.println("setup done");
+  wdt_disable();
 }
 
 void loop()
 {
-  display.fillScreen(GxEPD_WHITE);
-  display.drawCircle(50, 0, 10, GxEPD_BLACK);
- display.update();
-  delay(5000);
-
-  // //showBitmapExample();
-  // delay(2000);
-
-  // drawCornerTest();
-  // showFont("FreeMonoBold9pt7b", &FreeMonoBold9pt7b);
-  // showFont("FreeMonoBold12pt7b", &FreeMonoBold12pt7b);
-  // //showFont("FreeMonoBold18pt7b", &FreeMonoBold18pt7b);
-  // //showFont("FreeMonoBold24pt7b", &FreeMonoBold24pt7b);
-
-  // delay(10000);
+  Balkenberechnung();
+  if (digitalRead(mitte_Taste) == LOW){
+    Anzeige_Menue();
+  }
+  else {
+   Messen();
+   Anzeige_Standard();
+  }
 }
 
-
- 
-
-
-
-
-
-
-void showFont(const char name[], const GFXfont* f)
-{
+void Anzeige_Standard(){
   display.fillScreen(GxEPD_WHITE);
+  display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
+  display.setTextSize(2);
+  display.setCursor(35,7);
   display.setTextColor(GxEPD_BLACK);
-  display.setFont(f);
-  display.setCursor(0, 0);
-  display.println();
-  display.println(name);
-  display.println(" !\"#$%&'()*+,-./");
-  display.println("0123456789:;<=>?");
-  display.println("@ABCDEFGHIJKLMNO");
-  display.println("PQRSTUVWXYZ[\\]^_");
-#if defined(HAS_RED_COLOR)
-  display.setTextColor(GxEPD_RED);
-#endif
-  display.println("`abcdefghijklmno");
-  display.println("pqrstuvwxyz{|}~ ");
+  display.println("Trinkwasser");
+
+  display.setTextSize(3);
+  display.setCursor(5, 30);
+  display.print("Wasser:");
+  display.print(Wassermenge);
+  display.print("l");
+
+  display.setTextSize(6);
+  display.setCursor(10, 80);
+  display.print(Fuellmengenprozent);
+  display.print("%");
+
+  //Anzeigebalken unten
+  display.drawRoundRect(0, 174, 200, 25, 5, GxEPD_BLACK);
+  display.fillRoundRect(0, 174, Balkenlaenge, 25, 5, GxEPD_BLACK);
   display.update();
   delay(5000);
 }
 
-void showFontCallback()
-{
-  const char* name = "FreeMonoBold9pt7b";
-  const GFXfont* f = &FreeMonoBold9pt7b;
-  display.fillScreen(GxEPD_WHITE);
-  display.setTextColor(GxEPD_BLACK);
-  display.setFont(f);
-  display.setCursor(0, 0);
-  display.println();
-  display.println(name);
-  display.println(" !\"#$%&'()*+,-./");
-  display.println("0123456789:;<=>?");
-  display.println("@ABCDEFGHIJKLMNO");
-  display.println("PQRSTUVWXYZ[\\]^_");
-#if defined(HAS_RED_COLOR)
-  display.setTextColor(GxEPD_RED);
-#endif
-  display.println("`abcdefghijklmno");
-  display.println("pqrstuvwxyz{|}~ ");
+void Balkenberechnung(){
+  Balkenlaenge = map(Wassermenge, 0, 80, 0, 200);
 }
+
+void Anzeige_Menue(){
+  display.fillScreen(GxEPD_WHITE);
+  display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
+  display.setTextSize(2);
+  display.setCursor(80,7);
+  display.setTextColor(GxEPD_BLACK);
+  display.println("Menue");
+  display.setCursor(5,30);
+  display.setTextSize(2);
+  display.println("Wenn Tank leer,");
+  display.println("linke Taste ...");
+  display.println(" ");
+  display.println("Wenn Tank voll,");
+  display.println("rechte Taste ...");
+  display.println(" ");
+  display.update();
+  
+  while ((digitalRead(links_Taste) == HIGH) && (digitalRead(rechts_Taste) == HIGH)){
+    //wdt_reset();
+    if (digitalRead(rechts_Taste) == LOW){
+      Fuellmengenprozent = 0;
+      delay(100);
+    }
+    // if (digitalRead(rechts_Taste) == LOW){
+    //   Fuellmengenprozent = 100;
+    //   delay(100);
+    //   break;
+    // }
+  }
+}
+
+void Messen(){
+  //5 Messungen machen und Mittelwert bilden
+  Messwert=0;
+  for(int i=0;i<5;i++){
+    Messwert+=analogRead(Messeingang);
+  }
+  Messwert=trunc(Messwert/5);
+  
+  //Spannung berechnen
+  SpannungR2=(VCC/1023.0)*Messwert;
+  Serial.print("Spannung ueber R2 betraegt ");
+  Serial.print(SpannungR2,2);
+  Serial.println(" Volt!");
+  //Berechnung: (R2 = R1 * (U2/U1))
+  Widerstand=R1*(SpannungR2/(VCC-SpannungR2));
+  Serial.print("Der Widerstand hat ");
+  Serial.print(Widerstand,2);
+  Serial.println(" Ohm.");
+  Serial.println();
+  delay(1000);
+}
+
+
 
 
