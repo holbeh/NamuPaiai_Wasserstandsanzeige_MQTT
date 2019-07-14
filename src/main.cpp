@@ -32,6 +32,8 @@
 #include <Fonts/FreeMonoBold24pt7b.h>
 #include <GxIO/GxIO_SPI/GxIO_SPI.h>
 #include <GxIO/GxIO.h>
+#include <EEPROM.h>
+#include "myTypes.h"
 
 #if defined(ESP8266)
 
@@ -102,6 +104,8 @@ int Farbwert_rot;
 int Farbwert_gruen;
 int LED_Menge;
 
+int ePaperzaehler = 20;
+
 int Balkenlaenge = 0;
 int Wassermenge;
 int Fuellmengenprozent = 99;
@@ -118,11 +122,18 @@ int numPixels   = 8;
 int pixelFormat = NEO_GRB + NEO_KHZ800;
 Adafruit_NeoPixel *pixels;
 
+int cfgStart = 0;
+configData_t cfg;
+
 void Anzeige_Standard();
 void Anzeige_Menue();
 void Messen();
 void Anzeige_LED();
 void all_mapping();
+void eraseConfig();
+void saveConfig();
+void loadConfig();
+void Startanzeige();
 
 void setup(){
   pinMode(links_Taste, INPUT_PULLUP);
@@ -141,26 +152,44 @@ void setup(){
   pixels->clear();
   pixels->show();
   //wdt_disable();
+  loadConfig();
+  Messwert_HIGH = cfg.Messwert_HIGH;
+  Messwert_LOW = cfg.Messwert_LOW;
+  Serial.println("");
+  Serial.println("Hier die Daten aus dem EEPRom");
+  Serial.println("");
+  Serial.println(Messwert_LOW);
+  Serial.println(Messwert_HIGH);
+  Serial.println("ich hoffe, dass passt...");
+  Startanzeige();
 }
 
 void loop(){
+  Messen();
+  all_mapping();
   pixels->clear();
+  pixels->show();
   if (digitalRead(links_Taste) == LOW){
-    LEDs = true;
+    delay(200);
+    LEDs = !LEDs;
   }
   if (digitalRead(mitte_Taste) == LOW){
+    delay(200);
     Anzeige_Menue();
   }
   else {
-   Messen();
-   all_mapping();
    if (LEDs == true){
    Anzeige_LED();
    }
-   Anzeige_Standard();
+   if (ePaperzaehler >= 20){
+     ePaperzaehler = 0;
+    Anzeige_Standard();
+   }
   }
-
-  
+ePaperzaehler++;
+Serial.print("ePaperzaehler: ");
+Serial.println(ePaperzaehler);
+delay(100);
 }
 
 void Anzeige_Standard(){
@@ -186,12 +215,12 @@ void Anzeige_Standard(){
   display.drawRoundRect(0, 174, 200, 25, 5, GxEPD_BLACK);
   display.fillRoundRect(0, 174, Balkenlaenge, 25, 5, GxEPD_BLACK);
   display.update();
-  delay(5000);
 }
 
 
 
 void Anzeige_Menue(){
+  eraseConfig();
   display.fillScreen(GxEPD_WHITE);
   display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
   display.setTextSize(2);
@@ -201,7 +230,8 @@ void Anzeige_Menue(){
   display.setCursor(5,30);
   display.setTextSize(2);
   display.println("Wenn Tank leer,");
-  display.println("linke Taste ...");
+  display.println("Auswahl-Taste");
+  display.println("druecken ...");
   display.println(" ");
   display.update();
   
@@ -211,6 +241,7 @@ void Anzeige_Menue(){
 
     if (digitalRead(links_Taste) == LOW){
       Messen();
+      cfg.Messwert_LOW = Messwert;
       Messwert_LOW = Messwert;
       delay(100);
       Serial.print("Messwert_LOW: ");
@@ -240,17 +271,19 @@ void Anzeige_Menue(){
   display.setCursor(80,7);
   display.setTextColor(GxEPD_BLACK);
   display.println("Menue");
-  display.setCursor(5,30);
+  display.setCursor(0,30);
   display.setTextSize(2);
   display.println("Wenn Tank voll,");
-  display.println("linke Taste ...");
+  display.println("Auswahl-Taste ");
+  display.println("druecken ...");
   display.println(" ");
   display.update();
 
    while (true){
-
+    delay(200);
     if (digitalRead(links_Taste) == LOW){
       Messen();
+      cfg.Messwert_HIGH = Messwert;
       Messwert_HIGH = Messwert;
       delay(100);
       Serial.print("Messwert_High: ");
@@ -259,6 +292,39 @@ void Anzeige_Menue(){
       break;
     }
   }
+  display.fillScreen(GxEPD_WHITE);
+  display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
+  display.setTextSize(2);
+  display.setCursor(80,7);
+  display.setTextColor(GxEPD_BLACK);
+  display.println("Menue");
+  display.setCursor(0,30);
+  display.setTextSize(2);
+  display.println("Danke!");
+  display.setTextSize(1);
+  display.println("Daten werden jetzt");
+  display.println("gespeichert");
+  display.println("...");
+  display.update();
+  delay(2000);
+  saveConfig();
+  display.fillScreen(GxEPD_WHITE);
+  display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
+  display.setTextSize(2);
+  display.setCursor(80,7);
+  display.setTextColor(GxEPD_BLACK);
+  display.println("Menue");
+  display.setCursor(0,30);
+  display.setTextSize(2);
+  display.println("folgende Daten  stehen im EEPROM");
+  display.println("");
+  display.print("unterer Wert: ");
+  display.println(cfg.Messwert_LOW);
+  display.print("oberer Wert: ");
+  display.println(cfg.Messwert_HIGH);
+  display.update();
+  ePaperzaehler = 20;
+  delay(5000);
 }
 
 void Messen(){
@@ -281,12 +347,10 @@ void Messen(){
   Serial.println(" Ohm.");
   Serial.println();
   Serial.println(Messwert);
-  delay(1000);
+  delay(100);
 }
 
 void Anzeige_LED(){
-pixels->clear();
-pixels->show();
   for(int i=0; i<LED_Menge; i++) { // For each pixel...
     // pixels->Color() takes RGB values, from 0,0,0 up to 255,255,255
     // Here we're using a moderately bright green color:
@@ -296,11 +360,89 @@ pixels->show();   // Send the updated pixel colors to the hardware.
 }
 
 void all_mapping(){
-  Farbwert_gruen= map(Messwert, Messwert_LOW, Messwert_HIGH, 0, 100);
-  Farbwert_rot=map(Messwert, Messwert_LOW, Messwert_HIGH, 100, 0);
-  LED_Menge=map(Messwert, Messwert_LOW, Messwert_HIGH, 1,8);
-  Fuellmengenprozent = map(Messwert, Messwert_LOW, Messwert_HIGH, 0, 99);
-  Balkenlaenge = map(Messwert, Messwert_LOW, Messwert_HIGH, 0, 200);
-  Wassermenge = map(Messwert, Messwert_LOW, Messwert_HIGH, Wassermin, Wassermax);
+  Farbwert_gruen= map(Messwert, cfg.Messwert_LOW, cfg.Messwert_HIGH, 0, 100);
+  Farbwert_rot=map(Messwert, cfg.Messwert_LOW, cfg.Messwert_HIGH, 100, 0);
+  LED_Menge=map(Messwert, cfg.Messwert_LOW, cfg.Messwert_HIGH, 1,8);
+  Fuellmengenprozent = map(Messwert, cfg.Messwert_LOW, cfg.Messwert_HIGH, 0, 99);
+  Balkenlaenge = map(Messwert, cfg.Messwert_LOW, cfg.Messwert_HIGH, 0, 200);
+  Wassermenge = map(Messwert, cfg.Messwert_LOW, cfg.Messwert_HIGH, Wassermin, Wassermax);
+  if (Farbwert_gruen > 100){
+    Farbwert_gruen = 100;
+  }
+  if (Farbwert_rot > 100){
+    Farbwert_rot = 100;
+  }
+  if (Farbwert_gruen < 0){
+    Farbwert_gruen = 0;
+  }
+  if (Farbwert_rot < 0){
+    Farbwert_rot = 0;
+  }
+  if (LED_Menge > 8){
+    LED_Menge = 8;
+  }
+  if (LED_Menge <0){
+    LED_Menge = 0;
+  }
+  if (Fuellmengenprozent > 99){
+    Fuellmengenprozent = 99;
+  }
+  if (Fuellmengenprozent < 15){
+    LEDs = !LEDs;
+  }
+  if (Fuellmengenprozent < 0){
+    Fuellmengenprozent = 0;
+  }
+  if (Balkenlaenge > 200){
+    Balkenlaenge = 200;
+  }
+  if (Balkenlaenge < 0){
+    Balkenlaenge = 0;
+  }
 }
 
+void eraseConfig() {
+  // Reset EEPROM bytes to '0' for the length of the data structure
+  EEPROM.begin(4095);
+  for (int i = cfgStart ; i < sizeof(cfg) ; i++) {
+    EEPROM.write(i, 0);
+  }
+  delay(200);
+  EEPROM.commit();
+  EEPROM.end();
+}
+
+void saveConfig() {
+  // Save configuration from RAM into EEPROM
+  EEPROM.begin(4095);
+  EEPROM.put( cfgStart, cfg );
+  delay(200);
+  EEPROM.commit();                      // Only needed for ESP8266 to get data written
+  EEPROM.end();                         // Free RAM copy of structure
+}
+
+void loadConfig() {
+  // Loads configuration from EEPROM into RAM
+  EEPROM.begin(4095);
+  EEPROM.get( cfgStart, cfg );
+  EEPROM.end();
+}
+
+void Startanzeige(){
+  display.fillScreen(GxEPD_WHITE);
+  display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
+  display.setTextSize(2);
+  display.setCursor(40,7);
+  display.setTextColor(GxEPD_BLACK);
+  display.println("Willkommen");
+  display.setCursor(0,30);
+  display.setTextSize(2);
+  display.println("folgende Daten  wurden aus dem  EEPROM gelesen:");
+  display.println("");
+  display.print("unterer Wert: ");
+  display.println(cfg.Messwert_LOW);
+  display.print("oberer Wert: ");
+  display.println(cfg.Messwert_HIGH);
+  display.update();
+  delay(8000);
+}
