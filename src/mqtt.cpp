@@ -10,29 +10,40 @@ PubSubClient client(wClient);
 void setup_wifi() {
   delay(10);
   // We start by connecting to a WiFi network
-  DEBUG_LOG("\n");
-  DEBUG_LOG("Connecting to ");
-  DEBUG_LOG(CONF_WIFI_SSID);
-  DEBUG_LOG("\n");
+  Serial.print("\n");
+  Serial.print("Connecting to ");
+  Serial.print(CONF_WIFI_SSID);
+  Serial.print("\n");
 
   WiFi.begin(CONF_WIFI_SSID, CONF_WIFI_PW);
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    DEBUG_LOG(".");
+  for (int i = 0; i < CONF_WIFI_TRIES; i++) {
+    if (WiFi.status() == WL_CONNECTED) { break; }
+      delay(500);
+      Serial.print(".");
   }
+  if (WiFi.status() != WL_CONNECTED) 
+    return;
+  delay(1000);
 
-  DEBUG_LOG("\n");
-  DEBUG_LOG("WiFi connected\n");
-  DEBUG_LOG("IP address: ");
-  DEBUG_LOG(WiFi.localIP());
-  DEBUG_LOG("\n");
+  Serial.print("\n");
+  Serial.print("WiFi connected\n");
+  Serial.print("IP address: ");
+  Serial.print(WiFi.localIP());
+  Serial.print("\n");
+  WiFi.printDiag(Serial);
+
+  client.setServer(CONF_MQTT_HOST, CONF_MQTT_PORT);
 }
 
 void reconnect() {
   // Loop until we're reconnected
-  while (!client.connected()) {
+  if (WiFi.status() != WL_CONNECTED) {
+    setup_wifi();
+  }
+  if (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
+    Serial.print(wClient.localIP());
     // Attempt to connect
     // If you do not want to use a username and password, change next line to
     // if (client.connect("ESP8266Client")) {

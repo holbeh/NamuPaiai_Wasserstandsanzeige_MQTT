@@ -5,7 +5,6 @@
 #include "config.h"
 
 void setup(){
-  setup_wifi();
   pinMode(links_Taste, INPUT_PULLUP);
   pinMode(mitte_Taste, INPUT_PULLUP);
   //pinMode(rechts_Taste, INPUT_PULLUP);
@@ -32,6 +31,7 @@ void setup(){
   Serial.println(Messwert_HIGH);
   Serial.println("ich hoffe, dass passt...");
   Startanzeige();
+  setup_wifi();
 }
 
 void loop(){
@@ -52,7 +52,7 @@ void loop(){
    Anzeige_LED();
    }
    if (ePaperzaehler >= 20){
-     ePaperzaehler = 0;
+    ePaperzaehler = 0;
     Anzeige_Standard();
    }
   }
@@ -65,6 +65,11 @@ delay(100);
 void Anzeige_Standard(){
   
   boolean written = publish(Fuellmengenprozent);
+  if (written) {
+    Serial.println("written to mqtt");
+  } else {
+    Serial.println("error writing to mqtt");
+  }
 
   display.fillScreen(GxEPD_WHITE);
   display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);
