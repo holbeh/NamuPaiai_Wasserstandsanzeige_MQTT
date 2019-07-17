@@ -2,5 +2,10 @@
     "terminal.integrated.env.osx": {
         "PATH": "/Users/holgerbehrens/.platformio/penv/bin:/Users/holgerbehrens/.platformio/penv:/Library/Frameworks/Python.framework/Versions/3.7/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
         "PLATFORMIO_CALLER": "vscode"
+    },
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/kloenk/.platformio/penv/bin:/home/kloenk/.platformio/penv:/home/kloenk/bin:/run/wrappers/bin:/home/kloenk/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin:/etc/profiles/per-user/kloenk/bin",
+        "PLATFORMI
+        O_CALLER": "vscode"
     }
 }
