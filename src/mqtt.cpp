@@ -7,6 +7,10 @@
 WiFiClient wClient;
 PubSubClient client(wClient);
 
+void callback(char* topic, byte* payload, unsigned int length); // private callback function for mqtt
+
+char *timestr;
+
 void setup_wifi() {
   delay(10);
   // We start by connecting to a WiFi network
@@ -34,6 +38,8 @@ void setup_wifi() {
   WiFi.printDiag(Serial);
 
   client.setServer(CONF_MQTT_HOST, CONF_MQTT_PORT);
+  client.setCallback(callback);
+  client.subscribe(CONF_MQTT_TIMETOPIC);
 }
 
 void reconnect() {
@@ -66,5 +72,21 @@ boolean publish(int percentage) {
     if (!client.connected()) {
         return false;
     }
-    return client.publish(CONF_MQTT_PUB_CH0, String(percentage).c_str(), true);
+    bool ret =  client.publish(CONF_MQTT_PUB_CH0, String(percentage).c_str(), true);
+    client.subscribe(CONF_MQTT_TIMETOPIC);
+    return ret;
+}
+
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  /* Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i=0;i<length;i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println(); */
+  if (topic == (char*)CONF_MQTT_TIMETOPIC) {
+      strncpy(timestr, (char*)payload, length);
+  }
 }

@@ -8,6 +8,8 @@ extern configData_t cfg;
 extern WiFiClient wClient;
 extern PubSubClient client;
 
+extern char *timestr;
+
 void setup_wifi();
 boolean publish(int percentage);
 
