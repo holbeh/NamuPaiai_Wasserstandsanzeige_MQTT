@@ -8,6 +8,7 @@
 namespace mytime {
     int setup();
     String time();
+    char *isoTime();
 }
 
 #endif //__TIME_H__

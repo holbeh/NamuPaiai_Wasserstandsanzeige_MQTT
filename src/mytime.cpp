@@ -20,3 +20,13 @@ String mytime::time() {
     return timeClient.getFormattedTime();
 }
 
+char *mytime::isoTime() {
+    timeClient.update();
+
+    //tm* tmS = localtime((time_t*)timeClient.getEpochTime());
+    tm* tmS = gmtime((time_t*)timeClient.getEpochTime()- 946684800);
+
+
+    //char* iso = asctime(tmS);	
+    return "iso";
+}

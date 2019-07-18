@@ -72,7 +72,7 @@ void Anzeige_Standard(){
     Serial.println("error writing to mqtt");
   }
 
-  String time = mytime::time();
+  char *time = mytime::isoTime();
   Serial.print("time: ");
   Serial.println(time);
 
