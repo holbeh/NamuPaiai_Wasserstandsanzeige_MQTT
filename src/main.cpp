@@ -286,7 +286,7 @@ void all_mapping(){
 void eraseConfig() {
   // Reset EEPROM bytes to '0' for the length of the data structure
   EEPROM.begin(4095);
-  for (int i = cfgStart ; i < sizeof(cfg) ; i++) {
+  for (unsigned int i = cfgStart ; i < sizeof(cfg) ; i++) {
     EEPROM.write(i, 0);
   }
   delay(200);
