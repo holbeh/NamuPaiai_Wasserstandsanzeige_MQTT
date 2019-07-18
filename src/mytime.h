@@ -5,9 +5,9 @@
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 
-namespace time {
+namespace mytime {
     int setup();
-    const char *time();
+    String time();
 }
 
 #endif //__TIME_H__

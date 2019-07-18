@@ -5,7 +5,7 @@
 #include "config.h"
 
 void setup(){
-  time::setup();
+  mytime::setup();
   pinMode(links_Taste, INPUT_PULLUP);
   pinMode(mitte_Taste, INPUT_PULLUP);
   //pinMode(rechts_Taste, INPUT_PULLUP);
@@ -72,7 +72,8 @@ void Anzeige_Standard(){
     Serial.println("error writing to mqtt");
   }
 
-  const char *time = time::time();
+  String time = mytime::time();
+  Serial.print("time: ");
   Serial.println(time);
 
   display.fillScreen(GxEPD_WHITE);

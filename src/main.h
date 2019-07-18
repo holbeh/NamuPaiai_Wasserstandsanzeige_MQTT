@@ -35,7 +35,7 @@
 #include <EEPROM.h>
 #include "myTypes.h"
 #include "mqtt.h"
-#include "time.h"
+#include "mytime.h"
 
 #if defined(ESP8266)
 
