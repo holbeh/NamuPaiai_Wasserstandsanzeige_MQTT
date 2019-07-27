@@ -72,9 +72,9 @@ void Anzeige_Standard(){
     Serial.println(F("error writing to mqtt"));
   }
 
-  char *time = mytime::isoTime();
+  /* char *time = mytime::isoTime();
   Serial.print(F("time: "));
-  Serial.println(time);
+  Serial.println(time); */
 
   display.fillScreen(GxEPD_WHITE);
   display.drawRoundRect(0, 0, 200, 25, 5, GxEPD_BLACK);

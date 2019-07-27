@@ -22,8 +22,10 @@ void setup_wifi() {
       delay(500);
       Serial.print(".");
   }
-  if (WiFi.status() != WL_CONNECTED) 
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println(F("unable to connect to" CONF_WIFI_SSID));
     return;
+  }
   delay(1000);
 
   Serial.print("\n");
@@ -39,9 +41,9 @@ void setup_wifi() {
 void reconnect() {
   // Loop until we're reconnected
   if (WiFi.status() != WL_CONNECTED) {
-    setup_wifi();
-  }
-  if (!client.connected()) {
+    //setup_wifi();
+    Serial.println(F("cannot connect to mqtt, because wl is not connected"));
+  } else if ( !client.connected() ) {
     Serial.print("Attempting MQTT connection...");
     Serial.print(wClient.localIP());
     // Attempt to connect

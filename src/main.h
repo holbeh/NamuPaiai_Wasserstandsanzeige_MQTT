@@ -138,6 +138,6 @@ void loadConfig();
 void Startanzeige();
 
 /* PROGMEM STRINGS THAT ARE USED MULTIPLE */
-const char MenuString[] PROGMEM = {"MENU"};
+const char MenuString[] PROGMEM = {"Menu"};
 
 #endif // __MAIN_H__

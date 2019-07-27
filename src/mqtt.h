@@ -3,6 +3,7 @@
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include "myTypes.h"
 
 extern configData_t cfg;
 extern WiFiClient wClient;
