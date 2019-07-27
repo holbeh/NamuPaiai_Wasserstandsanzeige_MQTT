@@ -137,4 +137,7 @@ void saveConfig();
 void loadConfig();
 void Startanzeige();
 
+/* PROGMEM STRINGS THAT ARE USED MULTIPLE */
+const char MenuString[] PROGMEM = {"MENU"};
+
 #endif // __MAIN_H__

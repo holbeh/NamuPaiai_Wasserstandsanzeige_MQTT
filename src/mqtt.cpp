@@ -10,8 +10,8 @@ PubSubClient client(wClient);
 void setup_wifi() {
   delay(10);
   // We start by connecting to a WiFi network
-  Serial.print("\n");
-  Serial.print("Connecting to ");
+  Serial.print(F("\n"));
+  Serial.print(F("Connecting to "));
   Serial.print(CONF_WIFI_SSID);
   Serial.print("\n");
 

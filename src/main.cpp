@@ -13,10 +13,10 @@ void setup(){
   //digitalWrite(rechts_Taste, HIGH);
   Serial.begin(115200);
   Serial.println();
-  Serial.println("setup");
+  Serial.println(F("setup"));
   display.init(9600); // enable diagnostic output on Serial
   display.setRotation(1);
-  Serial.println("setup done");
+  Serial.println(F("setup done"));
   pixels = new Adafruit_NeoPixel(numPixels, pin, pixelFormat);
   pixels->begin();
   pixels->clear();
@@ -25,12 +25,12 @@ void setup(){
   loadConfig();
   Messwert_HIGH = cfg.Messwert_HIGH;
   Messwert_LOW = cfg.Messwert_LOW;
-  Serial.println("");
-  Serial.println("Hier die Daten aus dem EEPRom");
-  Serial.println("");
+  Serial.println(F(""));
+  Serial.println(F("Hier die Daten aus dem EEPRom"));
+  Serial.println(F(""));
   Serial.println(Messwert_LOW);
   Serial.println(Messwert_HIGH);
-  Serial.println("ich hoffe, dass passt...");
+  Serial.println(F("ich hoffe, dass passt..."));
   Startanzeige();
   setup_wifi();
 }
@@ -58,7 +58,7 @@ void loop(){
    }
   }
 ePaperzaehler++;
-Serial.print("ePaperzaehler: ");
+Serial.print(F("ePaperzaehler: "));
 Serial.println(ePaperzaehler);
 delay(100);
 }
@@ -67,13 +67,13 @@ void Anzeige_Standard(){
   
   boolean written = publish(Fuellmengenprozent);
   if (written) {
-    Serial.println("written to mqtt");
+    Serial.println(F("written to mqtt"));
   } else {
-    Serial.println("error writing to mqtt");
+    Serial.println(F("error writing to mqtt"));
   }
 
   char *time = mytime::isoTime();
-  Serial.print("time: ");
+  Serial.print(F("time: "));
   Serial.println(time);
 
   display.fillScreen(GxEPD_WHITE);
@@ -81,18 +81,18 @@ void Anzeige_Standard(){
   display.setTextSize(2);
   display.setCursor(35,7);
   display.setTextColor(GxEPD_BLACK);
-  display.println("Trinkwasser");
+  display.println(F("Trinkwasser"));
 
   display.setTextSize(3);
   display.setCursor(5, 30);
-  display.print("Wasser:");
+  display.print(F("Wasser:"));
   display.print(Wassermenge);
-  display.print("l");
+  display.print(F("l"));
 
   display.setTextSize(10);
   display.setCursor(10, 80);
   display.print(Fuellmengenprozent);
-  display.print("%");
+  display.print(F("%"));
 
   //Anzeigebalken unten
   display.drawRoundRect(0, 174, 200, 25, 5, GxEPD_BLACK);
@@ -109,13 +109,13 @@ void Anzeige_Menue(){
   display.setTextSize(2);
   display.setCursor(80,7);
   display.setTextColor(GxEPD_BLACK);
-  display.println("Menue");
+  display.println(MenuString);
   display.setCursor(5,30);
   display.setTextSize(2);
-  display.println("Wenn Tank leer,");
-  display.println("Auswahl-Taste");
-  display.println("druecken ...");
-  display.println(" ");
+  display.println(F("Wenn Tank leer,"));
+  display.println(F("Auswahl-Taste"));
+  display.println(F("druecken ..."));
+  display.println(F(" "));
   display.update();
   
  // while ((digitalRead(links_Taste) == HIGH) && (digitalRead(rechts_Taste) == HIGH)){
@@ -127,9 +127,9 @@ void Anzeige_Menue(){
       cfg.Messwert_LOW = Messwert;
       Messwert_LOW = Messwert;
       delay(100);
-      Serial.print("Messwert_LOW: ");
+      Serial.print(F("Messwert_LOW: "));
       Serial.println(Messwert_LOW);
-      Serial.println("");
+      Serial.println(F(""));
       break;
     }
   }
@@ -138,12 +138,12 @@ void Anzeige_Menue(){
   display.setTextSize(2);
   display.setCursor(80,7);
   display.setTextColor(GxEPD_BLACK);
-  display.println("Menue");
+  display.println(MenuString);
   display.setCursor(5,30);
   display.setTextSize(3);
-  display.println("Danke!");
-  display.println("Jetzt Tank fuellen!");
-  display.println(" ");
+  display.println(F("Danke!"));
+  display.println(F("Jetzt Tank fuellen!"));
+  display.println(F(" "));
   display.update();
   delay(2000);
 
@@ -153,7 +153,7 @@ void Anzeige_Menue(){
   display.setTextSize(2);
   display.setCursor(80,7);
   display.setTextColor(GxEPD_BLACK);
-  display.println("Menue");
+  display.println(MenuString);
   display.setCursor(0,30);
   display.setTextSize(2);
   display.println("Wenn Tank voll,");
@@ -169,9 +169,9 @@ void Anzeige_Menue(){
       cfg.Messwert_HIGH = Messwert;
       Messwert_HIGH = Messwert;
       delay(100);
-      Serial.print("Messwert_High: ");
+      Serial.print(F("Messwert_High: "));
       Serial.println(Messwert_HIGH);
-      Serial.println("");
+      Serial.println(F(""));
       break;
     }
   }
@@ -180,14 +180,14 @@ void Anzeige_Menue(){
   display.setTextSize(2);
   display.setCursor(80,7);
   display.setTextColor(GxEPD_BLACK);
-  display.println("Menue");
+  display.println(MenuString);
   display.setCursor(0,30);
   display.setTextSize(2);
-  display.println("Danke!");
+  display.println(F("Danke!"));
   display.setTextSize(1);
-  display.println("Daten werden jetzt");
-  display.println("gespeichert");
-  display.println("...");
+  display.println(F("Daten werden jetzt"));
+  display.println(F("gespeichert"));
+  display.println(F("..."));
   display.update();
   delay(2000);
   saveConfig();
@@ -196,14 +196,14 @@ void Anzeige_Menue(){
   display.setTextSize(2);
   display.setCursor(80,7);
   display.setTextColor(GxEPD_BLACK);
-  display.println("Menue");
+  display.println(MenuString);
   display.setCursor(0,30);
   display.setTextSize(2);
-  display.println("folgende Daten  stehen im EEPROM");
-  display.println("");
-  display.print("unterer Wert: ");
+  display.println(F("folgende Daten  stehen im EEPROM"));
+  display.println(F(""));
+  display.print(F("unterer Wert: "));
   display.println(cfg.Messwert_LOW);
-  display.print("oberer Wert: ");
+  display.print(F("oberer Wert: "));
   display.println(cfg.Messwert_HIGH);
   display.update();
   ePaperzaehler = 20;
@@ -220,14 +220,14 @@ void Messen(){
   
   //Spannung berechnen
   SpannungR2=(VCC/1023.0)*Messwert;
-  Serial.print("Spannung ueber R2 betraegt ");
+  Serial.print(F("Spannung ueber R2 betraegt "));
   Serial.print(SpannungR2,2);
-  Serial.println(" Volt!");
+  Serial.println(F(" Volt!"));
   //Berechnung: (R2 = R1 * (U2/U1))
   Widerstand=R1*(SpannungR2/(VCC-SpannungR2));
-  Serial.print("Der Widerstand hat ");
+  Serial.print(F("Der Widerstand hat "));
   Serial.print(Widerstand,2);
-  Serial.println(" Ohm.");
+  Serial.println(F(" Ohm."));
   Serial.println();
   Serial.println(Messwert);
   delay(100);
@@ -317,14 +317,14 @@ void Startanzeige(){
   display.setTextSize(2);
   display.setCursor(40,7);
   display.setTextColor(GxEPD_BLACK);
-  display.println("Willkommen");
+  display.println(F("Willkommen"));
   display.setCursor(0,30);
   display.setTextSize(2);
-  display.println("folgende Daten  wurden aus dem  EEPROM gelesen:");
-  display.println("");
-  display.print("unterer Wert: ");
+  display.println(F("folgende Daten  wurden aus dem  EEPROM gelesen:"));
+  display.println(F(""));
+  display.print(F("unterer Wert: "));
   display.println(cfg.Messwert_LOW);
-  display.print("oberer Wert: ");
+  display.print(F("oberer Wert: "));
   display.println(cfg.Messwert_HIGH);
   display.update();
   delay(8000);
